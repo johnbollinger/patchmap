@@ -1308,42 +1308,37 @@ function closePrint(){document.getElementById('printOv').classList.remove('on');
 function buildPrintStrips(tapeW,showNums,labeledOnly){
   // tapeW in mm → pt conversion: 1mm ≈ 2.8346pt
   const mmToPt=2.8346;
-  const tapePt=Math.round(tapeW*mmToPt); // e.g. 18mm → 51pt
+  const tapePt=Math.round(tapeW*mmToPt);
   const cellH=tapePt;
-  // Cell width: fit square-ish. For tape labels portrait orientation isn't useful;
-  // each port is one cell wide. Width determined by content but minimum tapePt
   const cellW=Math.max(tapePt, Math.round(tapePt*1.1));
   const fontSel=document.getElementById('prFont').value;
   let strips='';
   A.panels.forEach(panel=>{
     const hasAny=panel.ports.some(p=>p.device||p.room||p.cableId);
     if(labeledOnly&&!hasAny)return;
-    // For modular panels (future): would split here per module
-    // For now: one continuous strip per panel
     const cells=panel.ports.map((port,i)=>{
       const lbl=port.device||(showNums?String(i+1):'');
       if(!lbl&&labeledOnly)return '';
       const sub=port.cableId||port.room||'';
-      const bar=port.color?`<div style="position:absolute;bottom:0;left:0;right:0;height:2.5pt;background:${port.color}"></div>`:'';
+      const bar=port.color?'<div style="position:absolute;bottom:0;left:0;right:0;height:2.5pt;background:'+port.color+'"></div>':'';
       let fs;
       if(fontSel==='auto'){
-        // Auto-fit: scale down for longer labels
         const raw=lbl.length||1;
-        fs=Math.min(tapePt*.52, (cellW*.82)/(raw*.55))+'pt';
+        fs=Math.min(tapePt*.52,(cellW*.82)/(raw*.55))+'pt';
       } else {
         fs=fontSel+'pt';
       }
-      return `<div style="flex:0 0 ${cellW}pt;height:${cellH}pt;border-right:.5pt solid #bbb;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Arial Narrow,Arial,sans-serif;font-weight:bold;text-align:center;padding:1pt 0;position:relative;overflow:hidden;color:#000;box-sizing:border-box;">
-        <div style="font-size:${fs};line-height:1.05;word-break:break-all;">${hx(lbl)}</div>
-        ${sub?`<div style="font-size:${Math.max(4,tapePt*.12)}pt;color:#555;line-height:1;">${hx(sub.substring(0,10))}</div>`:''}
-        ${bar}
-      </div>`;
+      const subHtml=sub?'<div style="font-size:'+Math.max(4,tapePt*.12)+'pt;color:#555;line-height:1;">'+hx(sub.substring(0,10))+'</div>':'';
+      return '<div style="flex:0 0 '+cellW+'pt;height:'+cellH+'pt;border-right:.5pt solid #bbb;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Arial Narrow,Arial,sans-serif;font-weight:bold;text-align:center;padding:1pt 0;position:relative;overflow:hidden;color:#000;box-sizing:border-box;">'+
+        '<div style="font-size:'+fs+';line-height:1.05;word-break:break-all;">'+hx(lbl)+'</div>'+
+        subHtml+bar+
+      '</div>';
     }).join('');
     if(!cells.trim())return;
-    strips+=`<div style="margin-bottom:${Math.round(tapePt*.6)}pt;">
-      <div style="font-size:6pt;font-family:Arial,sans-serif;color:#555;margin-bottom:2pt;">${hx(panel.name)}</div>
-      <div style="display:inline-flex;border:.5pt solid #333;">${cells}</div>
-    </div>`;
+    strips+='<div style="margin-bottom:'+Math.round(tapePt*.6)+'pt;">'+
+      '<div style="font-size:6pt;font-family:Arial,sans-serif;color:#555;margin-bottom:2pt;">'+hx(panel.name)+'</div>'+
+      '<div style="display:inline-flex;border:.5pt solid #333;">'+cells+'</div>'+
+    '</div>';
   });
   return strips;
 }
@@ -1356,7 +1351,7 @@ function updPrintPrev(){
   const wrap=document.getElementById('prPrevWrap');
   if(!strips){wrap.innerHTML='<p style="color:#999;font-size:11px;font-family:monospace;padding:4px">No labeled ports</p>';return;}
   // Scale preview down by 0.55 so it fits in the modal
-  wrap.innerHTML=`<div style="transform:scale(0.55);transform-origin:top left;width:181.8%">${strips}</div>`;
+  wrap.innerHTML='<div style="transform:scale(0.55);transform-origin:top left;width:181.8%">'+strips+'</div>';
 }
 
 function doPrint(){
@@ -1369,30 +1364,26 @@ function doPrint(){
   const tapePt=Math.round(tapeW*mmToPt);
   // Open print window sized to tape width
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:Arial,sans-serif;background:#fff;}
-@media print{
-  @page{
-    size:auto;
-    margin:0;
-  }
-  body{margin:0;padding:0;}
-  .no-print{display:none;}
-}
-.instructions{padding:8pt;font-size:8pt;color:#555;border-bottom:1pt solid #ccc;margin-bottom:6pt;}
-.instructions strong{color:#000;}
-</style>
-</head><body>
-<div class="instructions no-print">
-  <strong>PatchMap Label Print</strong> — Tape: ${tapeW}mm (${tapePt}pt) &nbsp;|&nbsp;
-  Printer: Brother PT-E550W &nbsp;|&nbsp;
-  Make sure device is connected to printer WiFi, then use browser Print (Ctrl+P / ⌘+P).
-  Set paper size to match tape width if prompted.
-</div>
-<div style="padding:4pt;">${strips}</div>
-</body></html>`);
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8">'+
+'<style>'+
+'*{box-sizing:border-box;margin:0;padding:0;}'+
+'body{font-family:Arial,sans-serif;background:#fff;}'+
+'@media print{'+
+'@page{size:'+totalW+'pt '+pt+'pt;margin:0;}'+
+'body{margin:0;padding:0;}'+
+'.no-print{display:none;}'+
+'}'+
+'.instructions{padding:8pt;font-size:8pt;color:#555;border-bottom:1pt solid #ccc;margin-bottom:6pt;}'+
+'.instructions strong{color:#000;}'+
+'</style>'+
+'</head><body>'+
+'<div class="instructions no-print">'+
+'<strong>PatchMap Label Print</strong> — Tape: '+tapeW+'mm ('+tapePt+'pt) &nbsp;|&nbsp;'+
+'Printer: Brother PT-E550W &nbsp;|&nbsp;'+
+'Make sure device is connected to printer WiFi, then use browser Print (Ctrl+P).'+
+'</div>'+
+'<div style="padding:4pt;">'+strips+'</div>'+
+'</body></html>');
   w.document.close();
   // Small delay to let fonts/layout settle before print dialog
   setTimeout(()=>w.print(),400);
