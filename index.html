@@ -150,6 +150,8 @@ main{flex:1;padding:14px 16px;overflow-x:auto;}
   <label class="b g" style="cursor:pointer">⬆ Import<input type="file" accept=".patchmap,.json" style="display:none" onchange="importProject(this)"></label>
 </div>
 
+<div class="tb">
+  <button class="b w" id="bSer" onclick="openSer()" disabled>⟶ Serialize</button>
   <button class="b" id="bDet" onclick="openDet()" disabled>⋮ Details</button>
   <div class="tdv"></div>
   <button class="b" id="bIns" onclick="openIns()" disabled>⊕ Insert</button>
@@ -1590,10 +1592,4 @@ document.getElementById('prjName').addEventListener('input',function(){
 
 // Hook markDirty into pushH
 const _origPushH=pushH;
-function pushH(){_origPushH();markDirty();}
-
-// ─── BOOT ────────────────────────────────────
-bootRestore();
-</script>
-</body>
-</html>
+function pushH(){_origPushH();markDi
