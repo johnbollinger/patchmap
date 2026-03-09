@@ -487,7 +487,7 @@ function setScale(v){
 
 // ─── HISTORY ─────────────────────────────────
 function snap(){return JSON.stringify(A.panels.map(p=>({...p,ports:p.ports.map(x=>({...x}))})));}
-function pushH(){A.hist.push(snap());if(A.hist.length>60)A.hist.shift();A.future=[];updTB();}
+let pushH=function(){A.hist.push(snap());if(A.hist.length>60)A.hist.shift();A.future=[];updTB();};
 function doUndo(){if(!A.hist.length)return;A.future.push(snap());restore(A.hist.pop());toastMsg('Undone');}
 function doRedo(){if(!A.future.length)return;A.hist.push(snap());restore(A.future.pop());toastMsg('Redone');}
 function restore(s){stopEdit(false);A.panels=JSON.parse(s);A.sel=[];renderAll();}
@@ -1592,4 +1592,4 @@ document.getElementById('prjName').addEventListener('input',function(){
 
 // Hook markDirty into pushH
 const _origPushH=pushH;
-function pushH(){_origPushH();markDi
+pushH=function(){_origPushH();m
